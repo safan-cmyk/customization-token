@@ -1,0 +1,66 @@
+// ============================================================
+// ADD TO EXISTING APPS SCRIPT - CUSTOMIZATION MODULE
+// ============================================================
+
+// Handle customization submissions
+function handleCustomization(data) {
+  const sheet = getOrCreateSheet("Customization Tickets");
+  ensureCustomizationHeaders(sheet);
+  
+  const row = [
+    data.timestamp || new Date().toISOString(),
+    data.ticketNumber || '',
+    data.invoiceNumber || '',
+    data.invoiceDate || '',
+    data.customerName || '',
+    data.customerPhone || '',
+    data.customerEmail || '',
+    data.currentProduct || '',
+    data.currentSpecs || '',
+    data.requestedSpecs || '',
+    JSON.stringify(data.additionalItems || []),
+    JSON.stringify(data.replacementItems || []),
+    data.staffName || '',
+    data.notes || ''
+  ];
+  
+  sheet.appendRow(row);
+  return { success: true, ticketNumber: data.ticketNumber };
+}
+
+function ensureCustomizationHeaders(sheet) {
+  const headers = [
+    "Timestamp", "Ticket Number", "Invoice Number", "Invoice Date",
+    "Customer Name", "Customer Phone", "Customer Email",
+    "Current Product", "Current Specs", "Requested Specs",
+    "Additional Items", "Replacement Items", "Staff Name", "Notes"
+  ];
+  
+  const firstRow = sheet.getRange(1, 1, 1, headers.length).getValues()[0];
+  let needsHeaders = false;
+  for (let i = 0; i < headers.length; i++) {
+    if (firstRow[i] !== headers[i]) needsHeaders = true;
+  }
+  if (needsHeaders) {
+    sheet.getRange(1, 1, 1, headers.length).setValues([headers]);
+    sheet.setFrozenRows(1);
+  }
+}
+
+function getOrCreateSheet(sheetName) {
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  let sheet = ss.getSheetByName(sheetName);
+  if (!sheet) {
+    sheet = ss.insertSheet(sheetName);
+  }
+  return sheet;
+}
+
+// Update doPost to handle customization type
+// Add this at the beginning of your existing doPost function:
+/*
+  if (data.type === 'customization') {
+    const result = handleCustomization(data);
+    return ContentService.createTextOutput(JSON.stringify(result));
+  }
+*/
